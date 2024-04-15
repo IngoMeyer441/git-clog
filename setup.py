@@ -26,8 +26,8 @@ setup(
     py_modules=["git_clog"],
     python_requires="~=3.3",
     entry_points={"console_scripts": ["git-clog = git_clog:main"]},
-    author="Ingo Heimbach",
-    author_email="IJ_H@gmx.de",
+    author="Ingo Meyer",
+    author_email="IJ_M@gmx.de",
     description=(
         "git-clog outputs the commit graph of the current Git repository and colorizes commit symbols by "
         "interpreting the first six commit hash digits as an RGB color value."
@@ -35,7 +35,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     license="MIT",
-    url="https://github.com/IngoHeimbach/git-clog",
+    url="https://github.com/IngoMeyer441/git-clog",
     keywords=["git"],
     classifiers=[
         "Development Status :: 4 - Beta",

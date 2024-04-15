@@ -9,10 +9,10 @@ import subprocess
 import sys
 from typing import Iterator, List, Optional, Tuple  # noqa: F401  # pylint: disable=unused-import
 
-__author__ = "Ingo Heimbach"
-__email__ = "IJ_H@gmx.de"
+__author__ = "Ingo Meyer"
+__email__ = "IJ_M@gmx.de"
 __license__ = "MIT"
-__version_info__ = (0, 2, 5)
+__version_info__ = (0, 3, 0)
 __version__ = ".".join(map(str, __version_info__))
 
 BLOCK_SIZE = 1024
@@ -79,7 +79,8 @@ def get_pager_with_options() -> List[str]:
 def gen_git_log() -> Iterator[str]:
     master_fd, slave_fd = pty.openpty()
     git_log_process = subprocess.Popen(
-        ["git", "--no-pager", "log", "--color=always", "--all", "--decorate", "--graph", "--oneline"], stdout=slave_fd
+        ["git", "--no-pager", "log", "--color=always", "--all", "--graph", "--format=%C(auto)%h%d %s %G?"],
+        stdout=slave_fd,
     )
     os.close(slave_fd)  # otherwise read from `master_fd` will wait forever
     byte_block = b""
@@ -109,13 +110,49 @@ def gen_git_log() -> Iterator[str]:
 
 
 def gen_colorized_git_log_output(git_log_iterator: Iterator[str]) -> Iterator[str]:
+    def colorize_sign_state(sign_state: str) -> str:
+        sign_to_escape_code = {
+            "G": "\x1b[32m",
+            "B": "\x1b[31m",
+            "U": "\x1b[33m",
+            "X": "\x1b[31m",
+            "Y": "\x1b[31m",
+            "R": "\x1b[31m",
+            "E": "\x1b[33m",
+            "N": "",
+        }
+        sign_to_text = {
+            "G": "✓",
+            "B": "✗ (bad)",
+            "U": "? (unknown validity)",
+            "X": "✗ (expired)",
+            "Y": "✗ (expired key)",
+            "R": "✗ (revoked key)",
+            "E": "? (missing key)",
+            "N": "",
+        }
+        if sign_to_text.get(sign_state) == "":
+            return ""
+        escape_code = sign_to_escape_code.get(sign_state, "")
+        sign_text = sign_to_text.get(sign_state)
+        if sign_text is None:
+            return sign_state
+        return "".join(
+            (
+                escape_code,
+                sign_text[:1],
+                "\x1b[m",
+                "".join(("\x1b[90m", sign_text[1:], "\x1b[m")) if len(sign_text) > 1 else "",
+            )
+        )
+
     commit_char = COMMIT_CHAR_UNICODE if is_locale_utf8() else COMMIT_CHAR_ASCII
-    line_regex = re.compile(r"([^\*]*)\*([^()]*\x1b[^m]*m)([0-9a-f]+)(\x1b[^m]*m.*)")
+    line_regex = re.compile(r"([^\*]*)\*([^()]*\x1b[^m]*m)([0-9a-f]+)(\x1b[^m]*m.*)(.)$")
     for line in git_log_iterator:
         line = line.rstrip()
         match_obj = line_regex.match(line)
         if match_obj is not None:
-            line_start, before_commit_hash, commit_hash, rest_of_line = match_obj.groups()
+            line_start, before_commit_hash, commit_hash, rest_of_line, sign_state = match_obj.groups()
             color_rgb_tuple = tuple(int(commit_hash[i : i + 2], base=16) for i in range(0, 6, 2))
             true_color_escape_sequence = "\x1b[38;2;{r:d};{g:d};{b:d}m".format(
                 r=color_rgb_tuple[0], g=color_rgb_tuple[1], b=color_rgb_tuple[2]
@@ -129,6 +166,7 @@ def gen_colorized_git_log_output(git_log_iterator: Iterator[str]) -> Iterator[st
                     before_commit_hash,
                     commit_hash,
                     rest_of_line,
+                    colorize_sign_state(sign_state),
                 ]
             )
             yield colored_line
