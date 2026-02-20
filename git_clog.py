@@ -13,7 +13,7 @@ from typing import Iterator, List, Optional, Tuple  # noqa: F401  # pylint: disa
 __author__ = "Ingo Meyer"
 __email__ = "IJ_M@gmx.de"
 __license__ = "MIT"
-__version_info__ = (0, 3, 0)
+__version_info__ = (0, 3, 1)
 __version__ = ".".join(map(str, __version_info__))
 
 BLOCK_SIZE = 1024
