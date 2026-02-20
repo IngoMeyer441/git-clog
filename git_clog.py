@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import contextlib
 import errno
 import locale
 import os
@@ -177,13 +178,16 @@ def gen_colorized_git_log_output(git_log_iterator: Iterator[str]) -> Iterator[st
 def print_git_log(colorized_log_iterator: Iterator[str]) -> None:
     pager_with_options = get_pager_with_options()
     pager_process = subprocess.Popen(pager_with_options, stdin=subprocess.PIPE)
+    assert pager_process.stdin is not None
     try:
         for line in colorized_log_iterator:
             pager_process.stdin.write(encode("{}\n".format(line)))
             pager_process.stdin.flush()
-        pager_process.stdin.close()
     except BrokenPipeError:
         pass
+    finally:
+        with contextlib.suppress(BrokenPipeError):
+            pager_process.stdin.close()
     returncode = pager_process.wait()
     if returncode != 0:
         raise PagerError(returncode)
