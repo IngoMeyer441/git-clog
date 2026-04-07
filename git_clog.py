@@ -13,7 +13,7 @@ from typing import Iterator, List, Optional, Tuple  # noqa: F401  # pylint: disa
 __author__ = "Ingo Meyer"
 __email__ = "IJ_M@gmx.de"
 __license__ = "MIT"
-__version_info__ = (0, 3, 1)
+__version_info__ = (0, 3, 2)
 __version__ = ".".join(map(str, __version_info__))
 
 BLOCK_SIZE = 1024
@@ -82,6 +82,7 @@ def gen_git_log() -> Iterator[str]:
     git_log_process = subprocess.Popen(
         ["git", "--no-pager", "log", "--color=always", "--all", "--graph", "--format=%C(auto)%h%d %s %G?"],
         stdout=slave_fd,
+        stderr=subprocess.DEVNULL,
     )
     os.close(slave_fd)  # otherwise read from `master_fd` will wait forever
     byte_block = b""
