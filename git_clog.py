@@ -82,6 +82,7 @@ def gen_git_log() -> Iterator[str]:
     git_log_process = subprocess.Popen(
         ["git", "--no-pager", "log", "--color=always", "--all", "--graph", "--format=%C(auto)%h%d %s %G?"],
         stdout=slave_fd,
+        stderr=subprocess.DEVNULL,
     )
     os.close(slave_fd)  # otherwise read from `master_fd` will wait forever
     byte_block = b""
