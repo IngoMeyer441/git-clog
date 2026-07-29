@@ -13,7 +13,7 @@ from typing import Iterator, List, Optional, Tuple  # noqa: F401  # pylint: disa
 __author__ = "Ingo Meyer"
 __email__ = "IJ_M@gmx.de"
 __license__ = "MIT"
-__version_info__ = (0, 3, 2)
+__version_info__ = (0, 3, 3)
 __version__ = ".".join(map(str, __version_info__))
 
 BLOCK_SIZE = 1024
@@ -60,19 +60,18 @@ def encode(unicode_string: str) -> bytes:
 def get_pager_with_options() -> List[str]:
     pager = None  # type: Optional[str]
     pager_options = []  # type: List[str]
-    try:
-        pager = subprocess.check_output(["git", "config", "--get", "core.pager"], universal_newlines=True)
-    except subprocess.CalledProcessError:
-        pass
+    if "GIT_PAGER" in os.environ:
+        pager = os.environ["GIT_PAGER"]
     if not pager:
-        for env_variable in ("GITPAGER", "PAGER"):
-            if env_variable in os.environ:
-                pager = os.environ[env_variable]
-                if pager:
-                    break
-        else:
-            pager = "less"
-    if pager in ("less", "more"):
+        try:
+            pager = subprocess.check_output(["git", "config", "--get", "core.pager"], universal_newlines=True).strip()
+        except subprocess.CalledProcessError:
+            pass
+    if not pager and "PAGER" in os.environ:
+        pager = os.environ["PAGER"]
+    if not pager:
+        pager = "less"
+    if pager == "less":
         pager_options = ["-R"]
     return [pager] + pager_options
 
