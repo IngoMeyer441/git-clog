@@ -61,7 +61,7 @@ def get_pager_with_options() -> List[str]:
     pager = None  # type: Optional[str]
     pager_options = []  # type: List[str]
     try:
-        pager = subprocess.check_output(["git", "config", "--get", "core.pager"], universal_newlines=True)
+        pager = subprocess.check_output(["git", "config", "--get", "core.pager"], universal_newlines=True).strip()
     except subprocess.CalledProcessError:
         pass
     if not pager:
