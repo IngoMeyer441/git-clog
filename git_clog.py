@@ -60,18 +60,17 @@ def encode(unicode_string: str) -> bytes:
 def get_pager_with_options() -> List[str]:
     pager = None  # type: Optional[str]
     pager_options = []  # type: List[str]
-    try:
-        pager = subprocess.check_output(["git", "config", "--get", "core.pager"], universal_newlines=True).strip()
-    except subprocess.CalledProcessError:
-        pass
+    if "GIT_PAGER" in os.environ:
+        pager = os.environ["GIT_PAGER"]
     if not pager:
-        for env_variable in ("GIT_PAGER", "PAGER"):
-            if env_variable in os.environ:
-                pager = os.environ[env_variable]
-                if pager:
-                    break
-        else:
-            pager = "less"
+        try:
+            pager = subprocess.check_output(["git", "config", "--get", "core.pager"], universal_newlines=True).strip()
+        except subprocess.CalledProcessError:
+            pass
+    if not pager and "PAGER" in os.environ:
+        pager = os.environ["PAGER"]
+    if not pager:
+        pager = "less"
     if pager in ("less", "more"):
         pager_options = ["-R"]
     return [pager] + pager_options
