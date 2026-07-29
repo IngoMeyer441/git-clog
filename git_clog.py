@@ -65,7 +65,7 @@ def get_pager_with_options() -> List[str]:
     except subprocess.CalledProcessError:
         pass
     if not pager:
-        for env_variable in ("GITPAGER", "PAGER"):
+        for env_variable in ("GIT_PAGER", "PAGER"):
             if env_variable in os.environ:
                 pager = os.environ[env_variable]
                 if pager:
