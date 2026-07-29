@@ -71,7 +71,7 @@ def get_pager_with_options() -> List[str]:
         pager = os.environ["PAGER"]
     if not pager:
         pager = "less"
-    if pager in ("less", "more"):
+    if pager == "less":
         pager_options = ["-R"]
     return [pager] + pager_options
 
